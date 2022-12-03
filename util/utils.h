@@ -20,7 +20,7 @@ typedef struct {
     uint32_t remaining_time;
     so_handler *handler;
 
-} so_thread_t
+} so_thread_t;
 
 typedef struct {
     uint8_t init;
@@ -32,6 +32,6 @@ typedef struct {
     so_thread_t **all_threads;
     so_thread_t **priority_queue;
 
-} so_scheduler_t
+} so_scheduler_t;
 
 #endif
