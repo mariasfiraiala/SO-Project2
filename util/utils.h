@@ -1,6 +1,11 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include <stdio.h>
+#include <inttypes.h>
+#include <errno.h>
+#include "so_scheduler.h"
+
 /* useful macro for handling error codes */
 #define DIE(assertion, call_description)				\
 	do {								\
@@ -11,6 +16,12 @@
 			exit(EXIT_FAILURE);				\
 		}							\
 	} while(0)
+
+#define NEW 10
+#define READY 11
+#define RUNNING 12
+#define BLOCKED 13
+#define TERMINATED 14
 
 typedef struct {
     tid_t tid;

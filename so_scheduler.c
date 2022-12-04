@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <errno.h>
-#include <inttypes.h>
 
 #include "util/so_scheduler.h"
 #include "util/utils.h"
