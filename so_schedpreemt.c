@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <semaphore.h>
 #include <pthread.h>
@@ -56,19 +57,18 @@ void update_sched(void)
     if (schedpreemt.current_thread == NULL || schedpreemt.current_thread->state == BLOCKED || schedpreemt.current_thread->state == TERMINATED) {
         schedpreemt.current_thread = schedpreemt.priority_queue[schedpreemt.queue_size - 1];
         run(schedpreemt.current_thread);
-    } else if (schedpreemt.priority_queue[schedpreemt.queue_size - 1]->priority > schedpreemt.current_thread->priority){
-        new_thread_in_queue(schedpreemt.current_thread);
-        schedpreemt.current_thread = schedpreemt.priority_queue[schedpreemt.queue_size - 1];
-        run(schedpreemt.current_thread);
     } else if (schedpreemt.current_thread->remaining_time <= 0) {
         // when the time slice of the current thread expired we start the thread with the greatest prio, be that the current thread or the one from the queue
-        if (schedpreemt.priority_queue[schedpreemt.queue_size - 1]->priority >= schedpreemt.current_thread->priority) {
+        if (schedpreemt.priority_queue[schedpreemt.queue_size - 1]->priority == schedpreemt.current_thread->priority) {
             new_thread_in_queue(schedpreemt.current_thread);
             schedpreemt.current_thread = schedpreemt.priority_queue[schedpreemt.queue_size - 1];
             run(schedpreemt.current_thread);
         } else {
             schedpreemt.current_thread->remaining_time = schedpreemt.time_slice;
+            sem_post(&schedpreemt.current_thread->running_thread);
         }
+    } else {
+        sem_post(&schedpreemt.current_thread->running_thread);
     }
 }
 
@@ -90,8 +90,10 @@ void insert_sorted(so_thread_t *thread)
     }
 
     int i = schedpreemt.queue_size - 1;
-    while (i >= 0 && thread->priority < schedpreemt.priority_queue[i]->priority)
+    while (i >= 0 && thread->priority < schedpreemt.priority_queue[i]->priority) {
         schedpreemt.priority_queue[i + 1] = schedpreemt.priority_queue[i];
+        --i;
+    }
     
     schedpreemt.priority_queue[i + 1] = thread;
     ++schedpreemt.queue_size;
