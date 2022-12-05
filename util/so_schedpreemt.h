@@ -3,12 +3,18 @@
 
 #include "utils.h"
 
-static so_thread_t *new_thread(so_handler *handler, uint32_t prio);
+so_thread_t *new_thread(so_handler *handler, uint32_t prio);
 
-static void new_thread_in_queue(so_thread_t *thread);
+void new_thread_in_queue(so_thread_t *thread);
 
-static void update_sched(void);
+void new_thread_in_all_threads(so_thread_t *thread);
 
-static void *thread_routine(void *thread);
+void update_sched(void);
+
+void *thread_routine(void *thread);
+
+void insert_sorted(so_thread_t *thread);
+
+void run(so_thread_t *thread);
 
 #endif

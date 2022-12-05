@@ -2,6 +2,7 @@
 #define UTILS_H_
 
 #include <stdio.h>
+#include <semaphore.h>
 #include <inttypes.h>
 #include <errno.h>
 #include "so_scheduler.h"
@@ -32,6 +33,7 @@ typedef struct {
     uint32_t remaining_time;
     so_handler *handler;
 
+    sem_t running_thread;
 } so_thread_t;
 
 typedef struct {
@@ -40,11 +42,13 @@ typedef struct {
     uint32_t events;
     uint32_t threads;
     uint32_t queue_size;
-    uint32_t capacity;
+    uint32_t capacity_threads;
+    uint32_t capacity_queue;
     so_thread_t *current_thread;
     so_thread_t **all_threads;
     so_thread_t **priority_queue;
 
+    sem_t running_sched;
 } so_scheduler_t;
 
 #endif
