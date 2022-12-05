@@ -22,6 +22,7 @@
 #define RUNNING 12
 #define BLOCKED 13
 #define TERMINATED 14
+#define DEFAULT_SIZE 16
 
 typedef struct {
     tid_t tid;
@@ -39,6 +40,7 @@ typedef struct {
     uint32_t events;
     uint32_t threads;
     uint32_t queue_size;
+    uint32_t capacity;
     so_thread_t *current_thread;
     so_thread_t **all_threads;
     so_thread_t **priority_queue;

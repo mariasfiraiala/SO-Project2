@@ -17,7 +17,12 @@ int so_init(unsigned int time_quantum, unsigned int io)
     schedpreemt.events = io;
     schedpreemt.threads = 0;
     schedpreemt.queue_size = 0;
+    schedpreemt.capacity = DEFAULT_SIZE;
     schedpreemt.current_thread = NULL;
+    schedpreemt.all_threads = malloc(DEFAULT_SIZE * sizeof(*schedpreemt.all_threads));
+    DIE(!schedpreemt.all_threads, "malloc() failed");
+    schedpreemt.priority_queue = malloc(DEFAULT_SIZE * sizeof(*schedpreemt.priority_queue));
+    DIE(!schedpreemt.priority_queue, "malloc() failed");
 
     return 0;
 }

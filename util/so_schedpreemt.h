@@ -5,7 +5,7 @@
 
 static so_thread_t *new_thread(so_handler *handler, uint32_t prio);
 
-static void new_thread_to_sched(so_thread_t *thread);
+static void new_thread_in_queue(so_thread_t *thread);
 
 static void update_sched(void);
 
