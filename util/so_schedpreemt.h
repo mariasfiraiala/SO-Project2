@@ -13,8 +13,6 @@ void update_sched(void);
 
 void *thread_routine(void *thread);
 
-void insert_sorted(so_thread_t *thread);
-
 void run(so_thread_t *thread);
 
 #endif

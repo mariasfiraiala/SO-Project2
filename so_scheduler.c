@@ -86,9 +86,10 @@ int so_signal(unsigned int io)
 
 void so_exec(void)
 {
+    so_thread_t *tmp = schedpreemt.current_thread;
     --(schedpreemt.current_thread->remaining_time);
     update_sched();
-    sem_wait(&schedpreemt.current_thread->running_thread);
+    sem_wait(&tmp->running_thread);
 }
 
 void so_end(void)
@@ -108,7 +109,6 @@ void so_end(void)
     }
 
     schedpreemt.init = 0;
-    sem_destroy(&schedpreemt.running_sched);
     free(schedpreemt.all_threads);
     free(schedpreemt.priority_queue);
 }
