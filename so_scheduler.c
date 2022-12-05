@@ -55,12 +55,33 @@ tid_t so_fork(so_handler *func, unsigned int priority)
 
 int so_wait(unsigned int io)
 {
+    if (io < 0 || io >= schedpreemt.events)
+        return -1;
 
+    schedpreemt.current_thread->state = BLOCKED;
+    schedpreemt.current_thread->io_event = io;
+
+    so_exec();
+
+    return 0;
 }
 
 int so_signal(unsigned int io)
 {
+    if (io < 0 || io >= schedpreemt.events)
+        return -1;
 
+    int woken_up = 0;
+    for (int i = 0; i < schedpreemt.threads; ++i)
+        if (schedpreemt.all_threads[i]->io_event == io && schedpreemt.all_threads[i]->state == BLOCKED) {
+            ++woken_up;
+            schedpreemt.all_threads[i]->state = READY;
+            schedpreemt.all_threads[i]->io_event = SO_MAX_NUM_EVENTS;
+            new_thread_in_queue(schedpreemt.all_threads[i]);
+        }
+
+    so_exec();
+    return woken_up;
 }
 
 void so_exec(void)
