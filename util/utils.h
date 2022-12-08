@@ -18,12 +18,12 @@
 		}							\
 	} while(0)
 
-#define NEW 10
-#define READY 11
-#define RUNNING 12
-#define BLOCKED 13
-#define TERMINATED 14
+#define READY        1
+#define RUNNING      2
+#define BLOCKED      4
+#define TERMINATED   8
 #define DEFAULT_SIZE 16
+#define INVALID_IO   -1
 
 typedef struct {
     tid_t tid;
@@ -39,7 +39,7 @@ typedef struct {
 typedef struct {
     uint8_t init;
     uint32_t time_slice;
-    uint32_t events;
+    int32_t events;
     uint32_t threads;
     uint32_t queue_size;
     uint32_t capacity_threads;

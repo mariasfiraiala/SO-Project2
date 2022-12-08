@@ -15,9 +15,8 @@ so_thread_t *new_thread(so_handler *handler, uint32_t prio)
     DIE(!new_thread, "malloc() failed");
 
     new_thread->tid = INVALID_TID;
-    new_thread->io_event = SO_MAX_NUM_EVENTS;
+    new_thread->io_event = INVALID_IO;
     new_thread->priority = prio;
-    new_thread->state = NEW;
     new_thread->remaining_time = schedpreemt.time_slice;
     new_thread->handler = handler;
 

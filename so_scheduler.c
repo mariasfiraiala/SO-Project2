@@ -73,7 +73,7 @@ int so_signal(unsigned int io)
 
     int woken_up = 0;
     for (int i = 0; i < schedpreemt.threads; ++i)
-        if (schedpreemt.all_threads[i]->io_event == io && schedpreemt.all_threads[i]->state == BLOCKED) {
+        if (schedpreemt.all_threads[i]->io_event == io) {
             ++woken_up;
             schedpreemt.all_threads[i]->state = READY;
             schedpreemt.all_threads[i]->io_event = SO_MAX_NUM_EVENTS;
