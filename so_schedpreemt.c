@@ -20,9 +20,10 @@ so_thread_t *new_thread(so_handler *handler, uint32_t prio)
     new_thread->remaining_time = schedpreemt.time_slice;
     new_thread->handler = handler;
 
-    sem_init(&new_thread->running_thread, 0, 0);
+    int32_t rc = sem_init(&new_thread->running_thread, 0, 0);
+    DIE(rc, "sem_init() failed");
 
-    int rc = pthread_create(&new_thread->tid, NULL, &thread_routine, (void *)new_thread);
+    rc = pthread_create(&new_thread->tid, NULL, &thread_routine, (void *)new_thread);
     DIE(rc, "pthread_create() failed");
 
     return new_thread;
@@ -32,7 +33,8 @@ void *thread_routine(void *thread)
 {
     so_thread_t *new_thread = (so_thread_t *)thread;
 
-    sem_wait(&new_thread->running_thread);
+    int32_t rc = sem_wait(&new_thread->running_thread);
+    DIE(rc, "sem_wait() failed");
 
     new_thread->handler(new_thread->priority);
     new_thread->state = TERMINATED;
@@ -45,9 +47,12 @@ void *thread_routine(void *thread)
 void update_sched(void)
 {
     if (!schedpreemt.queue_size) {
-        if (schedpreemt.current_thread->state == TERMINATED)
-            sem_post(&schedpreemt.running_sched);
-        sem_post(&schedpreemt.current_thread->running_thread);
+        if (schedpreemt.current_thread->state == TERMINATED) {
+            int32_t rc = sem_post(&schedpreemt.running_sched);
+            DIE(rc, "sem_post() failed");
+        }
+        int32_t rc = sem_post(&schedpreemt.current_thread->running_thread);
+        DIE(rc, "sem_post() failed");
 
         return;
     }
@@ -68,10 +73,12 @@ void update_sched(void)
             run(schedpreemt.current_thread);
         } else {
             schedpreemt.current_thread->remaining_time = schedpreemt.time_slice;
-            sem_post(&schedpreemt.current_thread->running_thread);
+            int32_t rc = sem_post(&schedpreemt.current_thread->running_thread);
+            DIE(rc, "sem_post() failed");
         }
     } else {
-        sem_post(&schedpreemt.current_thread->running_thread);
+        int32_t rc = sem_post(&schedpreemt.current_thread->running_thread);
+        DIE(rc, "sem_post() failed");
     }
 }
 
@@ -85,7 +92,7 @@ void new_thread_in_queue(so_thread_t *thread)
         schedpreemt.priority_queue = tmp;
     }
 
-    int i = schedpreemt.queue_size - 1;
+    int32_t i = schedpreemt.queue_size - 1;
     while (i >= 0 && thread->priority <= schedpreemt.priority_queue[i]->priority) {
         schedpreemt.priority_queue[i + 1] = schedpreemt.priority_queue[i];
         --i;
@@ -116,5 +123,6 @@ void run(so_thread_t *thread)
 
     schedpreemt.priority_queue[--schedpreemt.queue_size] = NULL;
 
-    sem_post(&thread->running_thread);
+    int32_t rc = sem_post(&thread->running_thread);
+    DIE(rc, "sem_post() failed");
 }
