@@ -1,3 +1,5 @@
+// Copyright 2022 Maria Sfiraiala (maria.sfiraiala@stud.acs.upb.ro)
+
 #ifndef SO_SCHEDPREEMT_H_
 #define SO_SCHEDPREEMT_H_
 
