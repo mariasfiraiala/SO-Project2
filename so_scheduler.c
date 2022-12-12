@@ -1,4 +1,4 @@
-// Copyright 2022 Maria Sfiraiala (maria.sfiraiala@stud.acs.upb.ro)
+// SPDX-License-Identifier: MIT
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,7 +84,7 @@ int so_signal(unsigned int io)
 		if (schedpreemt.all_threads[i]->io_event == io) {
 			++woken_up;
 			schedpreemt.all_threads[i]->state = READY;
-			schedpreemt.all_threads[i]->io_event = SO_MAX_NUM_EVENTS;
+			schedpreemt.all_threads[i]->io_event = INVALID_IO;
 			new_thread_in_queue(schedpreemt.all_threads[i]);
 		}
 

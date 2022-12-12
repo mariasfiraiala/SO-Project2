@@ -1,4 +1,4 @@
-// Copyright 2022 Maria Sfiraiala (maria.sfiraiala@stud.acs.upb.ro)
+// SPDX-License-Identifier: MIT
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +27,8 @@ so_thread_t *new_thread(so_handler *handler, uint32_t prio)
 
 	DIE(rc, "sem_init() failed");
 
-	rc = pthread_create(&new_thread->tid, NULL, &thread_routine, (void *)new_thread);
+	rc = pthread_create(&new_thread->tid, NULL, &thread_routine,
+						(void *)new_thread);
 
 	DIE(rc, "pthread_create() failed");
 
@@ -69,17 +70,17 @@ void update_sched(void)
 	if (schedpreemt.current_thread == NULL ||
 			schedpreemt.current_thread->state == BLOCKED ||
 				schedpreemt.current_thread->state == TERMINATED) {
-		schedpreemt.current_thread = schedpreemt.priority_queue[schedpreemt.queue_size - 1];
+		schedpreemt.current_thread = peek();
 		run(schedpreemt.current_thread);
-	} else if (schedpreemt.priority_queue[schedpreemt.queue_size - 1]->priority > schedpreemt.current_thread->priority) {
+	} else if (peek()->priority > schedpreemt.current_thread->priority) {
 		new_thread_in_queue(schedpreemt.current_thread);
-		schedpreemt.current_thread = schedpreemt.priority_queue[schedpreemt.queue_size - 1];
+		schedpreemt.current_thread = peek();
 		run(schedpreemt.current_thread);
 	} else if (schedpreemt.current_thread->remaining_time <= 0) {
 		// when the time slice of the current thread expired we start the thread with the greatest prio, be that the current thread or the one from the queue
-		if (schedpreemt.priority_queue[schedpreemt.queue_size - 1]->priority == schedpreemt.current_thread->priority) {
+		if (peek()->priority == schedpreemt.current_thread->priority) {
 			new_thread_in_queue(schedpreemt.current_thread);
-			schedpreemt.current_thread = schedpreemt.priority_queue[schedpreemt.queue_size - 1];
+			schedpreemt.current_thread = peek();
 			run(schedpreemt.current_thread);
 		} else {
 			schedpreemt.current_thread->remaining_time = schedpreemt.time_slice;
@@ -99,7 +100,8 @@ void new_thread_in_queue(so_thread_t *thread)
 	if (schedpreemt.queue_size >= schedpreemt.capacity_queue) {
 		schedpreemt.capacity_queue *= 2;
 
-		so_thread_t **tmp = realloc(schedpreemt.priority_queue, schedpreemt.capacity_queue * sizeof(so_thread_t *));
+		so_thread_t **tmp = realloc(schedpreemt.priority_queue,
+						schedpreemt.capacity_queue * sizeof(so_thread_t *));
 
 		DIE(!tmp, "realloc() failed");
 		schedpreemt.priority_queue = tmp;
@@ -123,7 +125,8 @@ void new_thread_in_all_threads(so_thread_t *thread)
 	if (schedpreemt.threads >= schedpreemt.capacity_threads) {
 		schedpreemt.capacity_threads *= 2;
 
-		so_thread_t **tmp = realloc(schedpreemt.all_threads, schedpreemt.capacity_threads * sizeof(so_thread_t *));
+		so_thread_t **tmp = realloc(schedpreemt.all_threads,
+						schedpreemt.capacity_threads * sizeof(so_thread_t *));
 
 		DIE(!tmp, "realloc() failed");
 		schedpreemt.all_threads = tmp;
@@ -142,4 +145,9 @@ void run(so_thread_t *thread)
 	int32_t rc = sem_post(&thread->running_thread);
 
 	DIE(rc, "sem_post() failed");
+}
+
+so_thread_t *peek(void)
+{
+	return schedpreemt.priority_queue[schedpreemt.queue_size - 1];
 }

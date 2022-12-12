@@ -1,5 +1,3 @@
-// Copyright 2022 Maria Sfiraiala (maria.sfiraiala@stud.acs.upb.ro)
-
 #ifndef UTILS_H_
 #define UTILS_H_
 
