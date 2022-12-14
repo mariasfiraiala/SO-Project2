@@ -29,6 +29,11 @@ int so_init(unsigned int time_quantum, unsigned int io)
 	schedpreemt.priority_queue = malloc(DEFAULT_SIZE * sizeof(so_thread_t *));
 	DIE(!schedpreemt.priority_queue, "malloc() failed");
 
+	/*
+	 * create semaphore for scheduler and let only one thread to use it
+	 * sem_init(..., 0, 1) = sem_init(..., 0, 0)
+	 *						 sem_post(...)
+	 */
 	int32_t rc = sem_init(&schedpreemt.running_sched, 0, 1);
 
 	DIE(rc, "sem_init() failed");
@@ -41,21 +46,35 @@ tid_t so_fork(so_handler *func, unsigned int priority)
 	if (!func || priority > SO_MAX_PRIO)
 		return INVALID_TID;
 
+	/*
+	 * stop the sched if there is no thread in our "system"
+	 */
 	if (!schedpreemt.threads) {
 		int32_t rc = sem_wait(&schedpreemt.running_sched);
 
 		DIE(rc, "sem_wait() failed");
 	}
 
+	/*
+	 * create and initialize new thread
+	 */
 	so_thread_t *new = new_thread(func, priority);
 
+	/*
+	 * add the newly created thread to our internal kitchen and in the prio
+	 * queue as well
+	 */
 	new_thread_in_all_threads(new);
 	new_thread_in_queue(new);
 
-	if (schedpreemt.current_thread)
-		so_exec();
-	else
+	/*
+	 * if there is no running thread, we'll update the scheduler using
+	 * round robin, otherwise we'll simulate its execution
+	 */
+	if (!schedpreemt.current_thread)
 		update_sched();
+	else
+		so_exec();
 
 	return new->tid;
 }
@@ -65,6 +84,9 @@ int so_wait(unsigned int io)
 	if (io < 0 || io >= schedpreemt.events)
 		return -1;
 
+	/*
+	 * block the thread that wants to interract with an io device
+	 */
 	schedpreemt.current_thread->state = BLOCKED;
 	schedpreemt.current_thread->io_event = io;
 
@@ -80,6 +102,10 @@ int so_signal(unsigned int io)
 
 	uint32_t woken_up = 0;
 
+	/*
+	 * go through all of our threads and wake up the ones that wait for a
+	 * certain event
+	 */
 	for (int i = 0; i < schedpreemt.threads; ++i)
 		if (schedpreemt.all_threads[i]->io_event == io) {
 			++woken_up;
@@ -94,6 +120,10 @@ int so_signal(unsigned int io)
 
 void so_exec(void)
 {
+	/*
+	 * simulate doing work then block the thread from running, as we reach the
+	 * end of our simulation
+	 */
 	so_thread_t *tmp = schedpreemt.current_thread;
 	--(schedpreemt.current_thread->remaining_time);
 	update_sched();
