@@ -58,21 +58,21 @@ tid_t so_fork(so_handler *func, unsigned int priority)
 	/*
 	 * create and initialize new thread
 	 */
-	so_thread_t *new = new_thread(func, priority);
+	so_thread_t *new = so_new_thread(func, priority);
 
 	/*
 	 * add the newly created thread to our internal kitchen and in the prio
 	 * queue as well
 	 */
-	new_thread_in_all_threads(new);
-	new_thread_in_queue(new);
+	so_new_thread_in_all_threads(new);
+	so_new_thread_in_queue(new);
 
 	/*
 	 * if there is no running thread, we'll update the scheduler using
 	 * round robin, otherwise we'll simulate its execution
 	 */
 	if (!schedpreemt.current_thread)
-		update_sched();
+		so_schedule();
 	else
 		so_exec();
 
@@ -111,7 +111,7 @@ int so_signal(unsigned int io)
 			++woken_up;
 			schedpreemt.all_threads[i]->state = READY;
 			schedpreemt.all_threads[i]->io_event = INVALID_IO;
-			new_thread_in_queue(schedpreemt.all_threads[i]);
+			so_new_thread_in_queue(schedpreemt.all_threads[i]);
 		}
 
 	so_exec();
@@ -126,7 +126,7 @@ void so_exec(void)
 	 */
 	so_thread_t *tmp = schedpreemt.current_thread;
 	--(schedpreemt.current_thread->remaining_time);
-	update_sched();
+	so_schedule();
 
 	int32_t rc = sem_wait(&tmp->running_thread);
 

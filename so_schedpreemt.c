@@ -11,7 +11,7 @@
 
 extern so_scheduler_t schedpreemt;
 
-so_thread_t *new_thread(so_handler *handler, uint32_t prio)
+so_thread_t *so_new_thread(so_handler *handler, uint32_t prio)
 {
 	so_thread_t *new_thread = malloc(sizeof(*new_thread));
 
@@ -30,7 +30,7 @@ so_thread_t *new_thread(so_handler *handler, uint32_t prio)
 
 	DIE(rc, "sem_init() failed");
 
-	rc = pthread_create(&new_thread->tid, NULL, &thread_routine,
+	rc = pthread_create(&new_thread->tid, NULL, &so_thread_routine,
 						(void *)new_thread);
 
 	DIE(rc, "pthread_create() failed");
@@ -38,7 +38,7 @@ so_thread_t *new_thread(so_handler *handler, uint32_t prio)
 	return new_thread;
 }
 
-void *thread_routine(void *thread)
+void *so_thread_routine(void *thread)
 {
 	so_thread_t *new_thread = (so_thread_t *)thread;
 
@@ -53,12 +53,12 @@ void *thread_routine(void *thread)
 	new_thread->handler(new_thread->priority);
 	new_thread->state = TERMINATED;
 
-	update_sched();
+	so_schedule();
 
 	return NULL;
 }
 
-void update_sched(void)
+void so_schedule(void)
 {
 	/*
 	 * when the priority queue is empty, we can pause the scheduler
@@ -84,27 +84,27 @@ void update_sched(void)
 	if (schedpreemt.current_thread == NULL ||
 			schedpreemt.current_thread->state == BLOCKED ||
 				schedpreemt.current_thread->state == TERMINATED) {
-		schedpreemt.current_thread = peek();
-		run(schedpreemt.current_thread);
-	} else if (peek()->priority > schedpreemt.current_thread->priority) {
+		schedpreemt.current_thread = so_peek();
+		so_run_thread(schedpreemt.current_thread);
+	} else if (so_peek()->priority > schedpreemt.current_thread->priority) {
 		/*
 		 * when it suddenly appears a thread with a priority greater that
 		 * the one of the running thread, we yeet the running thread and
 		 * run the more important thread instead
 		 */
-		new_thread_in_queue(schedpreemt.current_thread);
-		schedpreemt.current_thread = peek();
-		run(schedpreemt.current_thread);
+		so_new_thread_in_queue(schedpreemt.current_thread);
+		schedpreemt.current_thread = so_peek();
+		so_run_thread(schedpreemt.current_thread);
 	} else if (schedpreemt.current_thread->remaining_time <= 0) {
 		/*
 		 * when the time slice of the current thread expired we start the
 		 * thread with the greatest prio, be that the current thread or the
 		 * one from the queue
 		 */
-		if (peek()->priority == schedpreemt.current_thread->priority) {
-			new_thread_in_queue(schedpreemt.current_thread);
-			schedpreemt.current_thread = peek();
-			run(schedpreemt.current_thread);
+		if (so_peek()->priority == schedpreemt.current_thread->priority) {
+			so_new_thread_in_queue(schedpreemt.current_thread);
+			schedpreemt.current_thread = so_peek();
+			so_run_thread(schedpreemt.current_thread);
 		} else {
 			schedpreemt.current_thread->remaining_time = schedpreemt.time_slice;
 			int32_t rc = sem_post(&schedpreemt.current_thread->running_thread);
@@ -121,7 +121,7 @@ void update_sched(void)
 	}
 }
 
-void new_thread_in_queue(so_thread_t *thread)
+void so_new_thread_in_queue(so_thread_t *thread)
 {
 	/*
 	 * redimension the queue when its size reaches the capacity, by doubling it
@@ -153,7 +153,7 @@ void new_thread_in_queue(so_thread_t *thread)
 	++schedpreemt.queue_size;
 }
 
-void new_thread_in_all_threads(so_thread_t *thread)
+void so_new_thread_in_all_threads(so_thread_t *thread)
 {
 	/*
 	 * resize the array of threads if needed
@@ -176,7 +176,7 @@ void new_thread_in_all_threads(so_thread_t *thread)
 	schedpreemt.all_threads[schedpreemt.threads++] = thread;
 }
 
-void run(so_thread_t *thread)
+void so_run_thread(so_thread_t *thread)
 {
 	/*
 	 * set the given thread as running, give it a time slice, remove it from
@@ -192,7 +192,7 @@ void run(so_thread_t *thread)
 	DIE(rc, "sem_post() failed");
 }
 
-so_thread_t *peek(void)
+so_thread_t *so_peek(void)
 {
 	return schedpreemt.priority_queue[schedpreemt.queue_size - 1];
 }
